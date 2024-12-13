@@ -51,7 +51,9 @@ def create_database():
         price INTEGER NOT NULL,
         year INTEGER NOT NULL,
         body_type TEXT NOT NULL,
+        color TEXT,
         image_path TEXT NOT NULL,
+        description TEXT,
         horsepower INTEGER,
         mileage INTEGER,
         features TEXT
@@ -371,11 +373,14 @@ class ManageCarsWindow(QWidget):
                 self.cars_table.setItem(row, 1, QTableWidgetItem(car[2]))  # Модель
                 self.cars_table.setItem(row, 2, QTableWidgetItem(str(car[3])))  # Год
                 self.cars_table.setItem(row, 3, QTableWidgetItem(str(car[4])))  # Цена
-                self.cars_table.setItem(row, 4, QTableWidgetItem(car[5]))  # Цвет
+
+                # Проверка на существование цвета
+                color = car[5] if len(car) > 5 else "Не указан"
+                self.cars_table.setItem(row, 4, QTableWidgetItem(color))  # Цвет
 
                 # Добавляем кнопку "Удалить" для каждого автомобиля
                 delete_button = QPushButton("Удалить")
-                delete_button.setStyleSheet("""
+                delete_button.setStyleSheet(""" 
                     QPushButton {
                         background-color: #FF6347;  /* Красная кнопка */
                         color: white;
@@ -1008,33 +1013,36 @@ class UserWindow(QWidget):
     def show_car_details(self, car):
         """Показывает информацию об автомобиле в новом окне."""
         try:
+            # Логируем данные для диагностики
+            print(f"Данные автомобиля: {car}")  # Выводим данные для проверки
+
             # Проверка на наличие данных автомобиля
-            if not car or len(car) < 10:
+            if not car or len(car) < 10:  # Убедитесь, что количество элементов не меньше 10
                 QMessageBox.warning(self, "Ошибка", "Данные автомобиля неполные или отсутствуют.")
                 return
 
             # Попытка преобразования цены в число
             try:
-                price = float(car[5])  # Преобразуем строку в число
+                price = float(car[3])  # Преобразуем строку в число, предполагаем что цена на 4-й позиции (индекс 3)
             except (ValueError, TypeError):
                 price = 0.0  # Если преобразование невозможно, устанавливаем цену в 0
 
             # Форматирование данных для отображения
             car_info = f"""
-                <b>Марка:</b> {car[1]}<br>
-                <b>Модель:</b> {car[2]}<br>
-                <b>Цена:</b> ${car[3]}<br>
-                <b>Год выпуска:</b> {car[4]}<br>
-                <b>Тип кузова:</b> {car[5]}<br>
-                <b>Цвет:</b> {car[10]}<br>
-                <b>Пробег:</b> {car[8]} км<br>
-                <b>Описание:</b> {car[9]}<br>
-                <b>Мощность:</b> {car[7]} л.с.
+                <b>Марка:</b> {car[1]}<br>  <!-- Марка автомобиля -->
+                <b>Модель:</b> {car[2]}<br>  <!-- Модель автомобиля -->
+                <b>Цена:</b> ${price}<br>  <!-- Используем price для корректного отображения -->
+                <b>Год выпуска:</b> {car[4]}<br>  <!-- Год выпуска -->
+                <b>Тип кузова:</b> {car[5]}<br>  <!-- Тип кузова -->
+                <b>Цвет:</b> {car[10] if len(car) > 10 else 'Не указан'}<br>  <!-- Цвет, если есть -->
+                <b>Пробег:</b> {car[8]} км<br>  <!-- Пробег -->
+                <b>Описание:</b> {car[9]}<br>  <!-- Описание -->
+                <b>Мощность:</b> {car[7]} л.с.  <!-- Мощность -->
             """
 
             # Создание окна с детальной информацией
             details_box = QMessageBox(self)
-            details_box.setWindowTitle(f"Информация о {car[1]} {car[2]}")
+            details_box.setWindowTitle(f"Информация о {car[1]} {car[2]}")  # Используем марку и модель
             details_box.setTextFormat(Qt.RichText)  # Поддержка HTML форматирования
             details_box.setText(car_info.strip())
             details_box.setIcon(QMessageBox.Information)
